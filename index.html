@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>ePrints – Custom T-Shirts</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#00897b;--green-dark:#004d40;--green-light:#e0f2f1;--green-bright:#00c853;
+  --bg:#f4f6f5;--white:#ffffff;--border:#e5ebe8;
+  --text:#0f1f15;--muted:#7a8f82;--red:#e53935;--gold:#f9a825;
+  --radius:14px;--nav:60px;--bottom:64px;
+  --shadow:0 2px 12px rgba(0,0,0,.07);--shadow-md:0 6px 24px rgba(0,0,0,.1);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;font-size:15px;font-weight:400;color:var(--text);background:var(--bg)}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━
+   SCREEN SYSTEM
+   Each screen = full viewport, shown/hidden
+━━━━━━━━━━━━━━━━━━━━━━━━ */
+.screen{
+  position:fixed;inset:0;
+  background:var(--bg);
+  display:none;flex-direction:column;
+  overflow:hidden;
+  transition:opacity .2s ease,transform .2s ease;
+  opacity:0;transform:translateX(20px);
+}
+.screen.active{display:flex;opacity:1;transform:translateX(0)}
+.screen.slide-back{opacity:0;transform:translateX(-20px)}
+
+/* Scrollable content area */
+.screen-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+.screen-body::-webkit-scrollbar{display:none}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━
+   TOP BAR
+━━━━━━━━━━━━━━━━━━━━━━━━ */
+.topbar{
+  height:var(--nav);flex-shrink:0;
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 1rem;gap:.6rem;
+  box-shadow:var(--shadow);
+  z-index:10;
+}
+.topbar-title{font-size:1rem;font-weight:700;color:var(--text);flex:1;text-align:center}
+.topbar-logo{font-size:1.2rem;font-weight:800;color:var(--green);letter-spacing:-.02em;flex:1;text-align:center}
+.topbar-logo b{color:var(--green-bright)}
+.back-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--text);flex-shrink:0;transition:background .15s}
+.back-btn:hover{background:var(--green-light)}
+.topbar-action{min-width:38px;height:32px;padding:0 .9rem;border-radius:50px;border:1.5px solid var(--green);background:transparent;color:var(--green);font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+.topbar-action:hover,.topbar-action.filled{background:var(--green);color:#fff}
+.topbar-spacer{width:38px;flex-shrink:0}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━
+   BOTTOM TAB BAR
+━━━━━━━━━━━━━━━━━━━━━━━━ */
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  height:var(--bottom);
+  background:var(--white);
+  border-top:1px solid var(--border);
+  display:none;
+  grid-template-columns:repeat(4,1fr);
+  z-index:50;
+  box-shadow:0 -2px 12px rgba(0,0,0,.06);
+}
+.bottom-bar.visible{display:grid}
+.tab-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.18rem;cursor:pointer;padding:.5rem 0;border:none;background:transparent;color:var(--muted);transition:color .15s;font-family:'Inter',sans-serif}
+.tab-item.active{color:var(--green)}
+.tab-icon{font-size:1.25rem;line-height:1}
+.tab-label{font-size:.58rem;font-weight:600;letter-spacing:.03em}
+.tab-dot{width:5px;height:5px;border-radius:50%;background:var(--green);margin-top:.1rem;display:none}
+.tab-item.active .tab-dot{display:block}
+/* Support unread notification dot */
+.tab-icon{font-size:1.25rem;line-height:1;position:relative;display:inline-block}
+.tab-notif{display:none;position:absolute;top:-3px;right:-5px;width:10px;height:10px;background:#00c853;border-radius:50%;border:2px solid #fff}
+.tab-notif.show{display:block}
+   COMPONENTS
+━━━━━━━━━━━━━━━━━━━━━━━━ */
+.wrap{max-width:560px;margin:0 auto;padding:1.2rem 1rem 1rem}
+
+.section-label{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;padding-left:.2rem}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:.75rem;box-shadow:var(--shadow)}
+.card-row{display:flex;align-items:center;padding:.9rem 1rem;border-bottom:1px solid var(--border);gap:.75rem}
+.card-row:last-child{border-bottom:none}
+.card-row-icon{font-size:1.1rem;width:24px;text-align:center;flex-shrink:0}
+.card-row-label{flex:1;font-size:.88rem;font-weight:500;color:var(--text)}
+.card-row-value{font-size:.82rem;color:var(--muted)}
+.card-row-arrow{color:var(--muted);font-size:.8rem}
+.card-inner{padding:1rem}
+
+.field{margin-bottom:.85rem}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:.38rem}
+.field input,.field textarea,.field select{
+  width:100%;padding:.78rem 1rem;
+  border:1.5px solid var(--border);border-radius:10px;
+  font-family:'Inter',sans-serif;font-size:.9rem;font-weight:400;
+  color:var(--text);background:var(--white);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  -webkit-appearance:none;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,137,123,.1)}
+.field input::placeholder,.field textarea::placeholder{color:#b8c8c0;font-weight:400}
+.field textarea{resize:none;min-height:80px;line-height:1.5}
+.field input:disabled{background:var(--bg);color:var(--muted)}
+
+.btn{
+  display:block;width:100%;
+  padding:.88rem 1.2rem;
+  border-radius:50px;border:none;
+  font-family:'Inter',sans-serif;
+  font-size:.9rem;font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+  text-align:center;
+}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 4px 20px rgba(0,137,123,.25)}
+.btn-primary:hover{background:var(--green-dark);box-shadow:0 6px 24px rgba(0,137,123,.35)}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-outline{background:transparent;color:var(--green);border:1.5px solid var(--green)}
+.btn-outline:hover{background:var(--green-light)}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border)}
+.btn-ghost:hover{border-color:var(--green);color:var(--green)}
+.btn-danger{background:var(--red);color:#fff}
+
+.err{font-size:.78rem;font-weight:500;color:var(--red);min-height:.9rem;margin-top:.4rem;text-align:center}
+.ok{font-size:.78rem;font-weight:500;color:var(--green);min-height:.9rem;margin-top:.4rem;text-align:center}
+
+.auth-tabs{display:flex;background:var(--bg);border-radius:50px;padding:3px;gap:3px;margin-bottom:1.4rem}
+.auth-tab{flex:1;padding:.6rem;text-align:center;border-radius:50px;font-size:.84rem;font-weight:600;cursor:pointer;color:var(--muted);border:none;background:transparent;transition:all .2s}
+.auth-tab.active{background:var(--white);color:var(--green);box-shadow:var(--shadow)}
+
+/* SIZE */
+.size-row{display:flex;flex-wrap:wrap;gap:.45rem}
+.size-pill{padding:.5rem 1.1rem;border:1.5px solid var(--border);border-radius:50px;background:var(--white);color:var(--muted);font-family:'Inter',sans-serif;font-size:.83rem;font-weight:500;cursor:pointer;transition:all .2s}
+.size-pill:hover{border-color:var(--green);color:var(--green)}
+.size-pill.sel{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+
+/* COLOUR */
+.colour-wrap{display:flex;flex-wrap:wrap;gap:.8rem;padding:.5rem 0 1.2rem}
+.swatch{width:32px;height:32px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:transform .15s,box-shadow .15s;position:relative}
+.swatch:hover{transform:scale(1.1)}
+.swatch.sel{border-color:var(--white);box-shadow:0 0 0 2.5px var(--green);transform:scale(1.15)}
+.colour-name{font-size:.75rem;color:var(--green);font-weight:600;margin-top:.2rem}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:1.4rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--bg)}
+.upload-zone:hover{border-color:var(--green);background:var(--green-light)}
+.upload-zone.done{border-color:var(--green-bright);background:#f0fdf4;border-style:solid}
+.upload-zone.uploading{border-color:var(--gold);background:#fffbeb;cursor:wait}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone.uploading input,.upload-zone.done input{pointer-events:none}
+.upload-zone .uz-icon{font-size:1.6rem;margin-bottom:.35rem}
+.upload-zone p{font-size:.8rem;color:var(--muted);line-height:1.4}
+.upload-zone p strong{color:var(--text);font-weight:600}
+.uz-status{font-size:.76rem;font-weight:600;margin-top:.4rem;min-height:.9rem}
+.uz-status.ok{color:var(--green)}.uz-status.busy{color:var(--gold)}.uz-status.bad{color:var(--red)}
+.uz-thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;margin-top:.6rem;border:2px solid rgba(0,137,123,.2);display:none}
+.prog-bar{width:100%;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:.6rem;display:none}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--green-bright));width:0%;transition:width .2s}
+
+/* PRICE SUMMARY */
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-top:1px solid var(--border)}
+.price-row .label{font-size:.82rem;color:var(--muted)}
+.price-row .amount{font-size:1.1rem;font-weight:800;color:var(--green);letter-spacing:-.02em}
+
+
+/* ATM PAYMENT CARD */
+.payment-atm-card{
+  position:relative;overflow:hidden;border-radius:22px;
+  padding:1.35rem 1.25rem 1.25rem;min-height:200px;
+  background:linear-gradient(135deg,#002920 0%,#00574a 40%,#007a6a 70%,#004d40 100%);
+  color:#fff;
+  box-shadow:0 14px 40px rgba(0,60,50,.45),0 2px 6px rgba(0,0,0,.2);
+  margin-bottom:1rem;
+}
+.payment-atm-card::before{
+  content:'';position:absolute;width:220px;height:220px;border-radius:50%;
+  background:rgba(255,255,255,.06);right:-60px;top:-70px;pointer-events:none;
+}
+.payment-atm-card::after{
+  content:'';position:absolute;width:140px;height:140px;border-radius:50%;
+  background:rgba(0,200,130,.1);left:-40px;bottom:-40px;pointer-events:none;
+}
+.atm-circuit{position:absolute;inset:0;width:100%;height:100%;opacity:.13;pointer-events:none;}
+.atm-shimmer{
+  position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);
+  animation:atmShimmer 3.5s ease-in-out infinite;pointer-events:none;
+}
+@keyframes atmShimmer{0%{left:-100%}60%{left:160%}100%{left:160%}}
+.atm-strip{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:18px;height:80%;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.12),rgba(255,255,255,.04));
+  border-radius:4px 0 0 4px;opacity:.6;
+}
+.payment-atm-chip{
+  width:44px;height:34px;border-radius:7px;
+  background:linear-gradient(135deg,#ffd54f 0%,#ffe082 45%,#ffb300 100%);
+  margin-bottom:1.1rem;position:relative;z-index:1;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.payment-atm-chip::before{
+  content:'';position:absolute;inset:6px 8px;
+  border:1.5px solid rgba(0,0,0,.18);border-radius:3px;
+}
+.payment-atm-title{font-size:.72rem;opacity:.75;letter-spacing:.14em;text-transform:uppercase;position:relative;z-index:1;}
+.payment-atm-number{
+  font-size:1.4rem;font-weight:800;letter-spacing:.14em;margin:.45rem 0 1rem;
+  font-family:'Courier New',monospace;position:relative;z-index:1;
+  text-shadow:0 1px 4px rgba(0,0,0,.3);
+}
+.payment-atm-row{display:flex;justify-content:space-between;gap:1rem;position:relative;z-index:1;}
+.payment-atm-label{font-size:.6rem;opacity:.7;text-transform:uppercase;letter-spacing:.08em}
+.payment-atm-value{font-size:.84rem;font-weight:700}
+
+/* PAYMENT */
+.pay-detail{display:flex;justify-content:space-between;align-items:center;padding:.72rem 1rem;border-bottom:1px solid var(--border)}
+.pay-detail:last-child{border-bottom:none}
+.pay-detail .k{font-size:.8rem;color:var(--muted);font-weight:500}
+.pay-detail .v{font-size:.84rem;font-weight:700;color:var(--text)}
+.copy-btn{padding:.2rem .6rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--muted);font-size:.66rem;font-weight:600;cursor:pointer;transition:all .15s}
+.copy-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* ORDER CARD */
+.order-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.65rem;cursor:pointer;transition:all .2s;box-shadow:var(--shadow);active:transform:scale(.99)}
+.order-card:hover{border-color:var(--green);box-shadow:var(--shadow-md)}
+.order-card:active{transform:scale(.99)}
+.oc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem}
+.oc-id{font-size:1rem;font-weight:800;color:var(--green);letter-spacing:.02em}
+.oc-date{font-size:.7rem;color:var(--muted);margin-top:.1rem}
+.oc-tags{display:flex;flex-wrap:wrap;gap:.3rem}
+.tag{font-size:.68rem;font-weight:500;padding:.2rem .55rem;border-radius:50px;border:1px solid var(--border);color:var(--muted);background:var(--bg)}
+
+/* BADGES */
+.badge{font-size:.66rem;font-weight:700;padding:.22rem .65rem;border-radius:50px;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase}
+.badge.pending {background:#fff8e1;border:1px solid #ffe082;color:#e65100}
+.badge.progress{background:#e3f2fd;border:1px solid #90caf9;color:#0d47a1}
+.badge.done    {background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20}
+.badge.ready   {background:#f3e5f5;border:1px solid #ce93d8;color:#4a148c}
+.badge.confirmed{background:#e0f7fa;border:1px solid #80deea;color:#006064}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal-sheet{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:1.2rem 1.2rem 2.5rem;animation:sheetUp .28s cubic-bezier(.22,1,.36,1)}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1rem}
+.modal-title{font-size:1rem;font-weight:800;margin-bottom:1rem}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:.65rem 0;border-bottom:1px solid var(--border);gap:.8rem}
+.detail-row:last-child{border-bottom:none}
+.detail-key{font-size:.78rem;color:var(--muted);font-weight:500;flex-shrink:0;padding-top:.05rem}
+.detail-val{font-size:.84rem;font-weight:600;color:var(--text);text-align:right;max-width:240px;word-break:break-word;white-space:pre-wrap}
+.modal-img{width:100%;border-radius:10px;margin-top:.4rem;object-fit:contain;max-height:180px;border:1px solid var(--border)}
+
+/* PROFILE AVATAR */
+.avatar-section{display:flex;flex-direction:column;align-items:center;padding:2rem 1rem 1.5rem;background:linear-gradient(160deg,var(--green-dark),var(--green))}
+.avatar-wrap{position:relative;margin-bottom:.8rem}
+.avatar-circle{width:88px;height:88px;border-radius:50%;background:var(--white);border:3px solid rgba(255,255,255,.5);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.avatar-circle img{width:100%;height:100%;object-fit:cover;display:none}
+.avatar-edit-btn{position:absolute;bottom:2px;right:2px;width:26px;height:26px;border-radius:50%;background:var(--green-bright);border:2.5px solid var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.7rem;box-shadow:0 2px 8px rgba(0,0,0,.2);overflow:hidden}
+.avatar-edit-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.avatar-name{font-size:1.1rem;font-weight:800;color:var(--white)}
+.avatar-email{font-size:.78rem;color:rgba(255,255,255,.7);margin-top:.15rem}
+
+/* CHAT */
+.chat-area{display:flex;flex-direction:column;gap:.5rem;padding:1rem;min-height:180px}
+.chat-bubble{max-width:78%;padding:.6rem .85rem;border-radius:16px;font-size:.83rem;line-height:1.45}
+.chat-bubble.user{background:var(--green);color:#fff;border-radius:16px 16px 4px 16px;align-self:flex-end}
+.chat-bubble.admin{background:var(--white);border:1px solid var(--border);color:var(--text);border-radius:16px 16px 16px 4px;align-self:flex-start}
+.chat-sender{font-size:.62rem;font-weight:700;opacity:.65;margin-bottom:.15rem}
+.chat-time{font-size:.58rem;opacity:.5;margin-top:.15rem;text-align:right}
+.chat-input-bar{display:flex;gap:.5rem;padding:.8rem 1rem;border-top:1px solid var(--border);background:var(--white);position:sticky;bottom:0}
+.chat-input{flex:1;padding:.65rem 1rem;border:1.5px solid var(--border);border-radius:50px;font-family:'Inter',sans-serif;font-size:.86rem;outline:none;transition:border-color .15s;background:var(--bg)}
+.chat-input:focus{border-color:var(--green);background:var(--white)}
+.chat-send{width:40px;height:40px;border-radius:50%;background:var(--green);border:none;color:#fff;font-size:1rem;cursor:pointer;flex-shrink:0;transition:background .15s;display:flex;align-items:center;justify-content:center}
+.chat-send:hover{background:var(--green-dark)}
+.no-msg{text-align:center;color:var(--muted);font-size:.82rem;padding:2rem 1rem}
+
+/* SUPPORT TABS */
+.support-tabs{display:flex;background:var(--bg);border-radius:50px;padding:3px;gap:3px;margin-bottom:1.2rem;border:1px solid var(--border)}
+.support-tab{flex:1;padding:.62rem .3rem;text-align:center;border-radius:50px;font-size:.76rem;font-weight:700;cursor:pointer;color:var(--muted);border:none;background:transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.3rem}
+.support-tab.active{background:var(--white);color:var(--green);box-shadow:var(--shadow)}
+.support-tab-pane{display:none}
+.support-tab-pane.active{display:flex;flex-direction:column}
+.bot-header{display:flex;align-items:center;gap:.65rem;padding:.9rem 1rem;background:linear-gradient(135deg,var(--green-dark),var(--green));border-radius:12px 12px 0 0}
+.bot-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.bot-name{font-size:.88rem;font-weight:700;color:#fff}
+.bot-status{font-size:.68rem;color:rgba(255,255,255,.7)}
+.bot-chat-area{background:var(--bg);border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;min-height:200px;padding:.8rem;display:flex;flex-direction:column;gap:.5rem;max-height:340px;overflow-y:auto}
+.bot-bubble{max-width:82%;padding:.58rem .85rem;border-radius:14px;font-size:.82rem;line-height:1.5}
+.bot-bubble.bot{background:var(--white);border:1px solid var(--border);color:var(--text);border-radius:14px 14px 14px 4px;align-self:flex-start}
+.bot-bubble.user{background:var(--green);color:#fff;border-radius:14px 14px 4px 14px;align-self:flex-end}
+.bot-bubble.typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--muted);animation:botTyping .9s ease-in-out infinite;margin:0 1px}
+.bot-bubble.typing span:nth-child(2){animation-delay:.15s}.bot-bubble.typing span:nth-child(3){animation-delay:.3s}
+@keyframes botTyping{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.bot-quick-btns{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.bot-quick-btn{padding:.32rem .75rem;border:1.5px solid var(--green);border-radius:50px;background:transparent;color:var(--green);font-family:'Inter',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;transition:all .15s}
+.bot-quick-btn:hover{background:var(--green);color:#fff}
+.wa-support-card{background:linear-gradient(135deg,#e8f5e9,#f1fbf1);border:1.5px solid rgba(0,137,123,.2);border-radius:14px;padding:1.1rem;margin-bottom:.7rem}
+.wa-support-card h3{color:var(--green-dark);margin-bottom:.3rem;font-size:.92rem}
+.wa-support-card p{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:.7rem}
+.wa-badge{display:inline-flex;align-items:center;gap:.3rem;background:#25D366;color:#fff;font-size:.72rem;font-weight:700;padding:.25rem .7rem;border-radius:50px;margin-bottom:.8rem}
+
+/* SUCCESS */
+#success-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.97);z-index:500;flex-direction:column;align-items:center;justify-content:center}
+#success-overlay.open{display:flex}
+.success-ring{width:86px;height:86px;border-radius:50%;border:3px solid var(--green);display:flex;align-items:center;justify-content:center;animation:ringIn .45s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes ringIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.success-check{font-size:2.6rem;animation:checkIn .3s .35s ease both;color:var(--green)}
+@keyframes checkIn{from{transform:scale(0)}to{transform:scale(1)}}
+.success-title{font-size:1.25rem;font-weight:800;color:var(--text);margin-top:1rem}
+.success-sub{font-size:.82rem;color:var(--muted);margin-top:.35rem;text-align:center;max-width:260px;line-height:1.5}
+
+/* SPINNER */
+.spinner{width:28px;height:28px;border:2.5px solid var(--green-light);border-top-color:var(--green);border-radius:50%;animation:spin .65s linear infinite;margin:2rem auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ADMIN */
+.admin-stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:1.2rem}
+@media(min-width:480px){.admin-stat-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-box{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;box-shadow:var(--shadow)}
+.stat-num{font-size:1.7rem;font-weight:800;color:var(--green);letter-spacing:-.03em}
+.stat-lab{font-size:.68rem;color:var(--muted);font-weight:500;margin-top:.1rem}
+.chip-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.chip{padding:.3rem .8rem;border-radius:50px;font-size:.72rem;font-weight:600;border:1.5px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.chip.active{background:var(--green);border-color:var(--green);color:#fff}
+.admin-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.65rem;box-shadow:var(--shadow)}
+.admin-card:hover{border-color:var(--green)}
+.admin-id{font-size:1rem;font-weight:800;color:var(--green);letter-spacing:.02em}
+.admin-meta{font-size:.72rem;color:var(--muted);margin-top:.1rem;line-height:1.5}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem .8rem;margin:.7rem 0}
+.admin-kv{font-size:.78rem}
+.admin-kv .k{color:var(--muted)}.admin-kv .v{font-weight:600;color:var(--text)}
+.admin-img{width:100%;max-height:140px;object-fit:contain;border-radius:8px;border:1px solid var(--border);margin:.4rem 0}
+.admin-receipt{width:100%;max-height:140px;object-fit:contain;border-radius:8px;border:1px solid rgba(0,200,83,.3);margin:.4rem 0}
+.status-sel{padding:.32rem .65rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.76rem;font-weight:600;color:var(--text);background:var(--white);cursor:pointer;outline:none;transition:border-color .15s}
+.status-sel:focus{border-color:var(--green)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.6rem}
+.status-block{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.65rem .7rem}
+.status-block-lab{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.4rem}
+
+/* LANDING */
+.landing-hero{background:linear-gradient(150deg,var(--green-dark) 0%,var(--green) 100%);padding:3rem 1.4rem 2.5rem;text-align:center;position:relative;overflow:hidden}
+.landing-hero::before{content:'👕';position:absolute;font-size:12rem;right:-2rem;bottom:-2rem;opacity:.06;line-height:1}
+.hero-pill{display:inline-flex;align-items:center;gap:.35rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:.32rem .9rem;border-radius:50px;margin-bottom:1rem}
+.hero-title{font-size:clamp(2.4rem,9vw,3.8rem);font-weight:900;color:#fff;letter-spacing:-.04em;line-height:.95;margin-bottom:.6rem}
+.hero-title .accent{color:var(--green-bright)}
+.hero-sub{font-size:.9rem;color:rgba(255,255,255,.72);margin-bottom:2rem;line-height:1.55;font-weight:300}
+.hero-cta{display:inline-block;background:#fff;color:var(--green);font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;padding:.82rem 2.2rem;border-radius:50px;border:none;cursor:pointer;box-shadow:0 6px 28px rgba(0,0,0,.18);transition:transform .2s,box-shadow .2s}
+.hero-cta:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(0,0,0,.22)}
+.feat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:1rem;background:var(--white);border-bottom:1px solid var(--border)}
+.feat{text-align:center;padding:.7rem .4rem}
+.feat .fi{font-size:1.4rem;margin-bottom:.3rem}
+.feat .ft{font-size:.75rem;font-weight:700;color:var(--text)}
+.feat .fs{font-size:.67rem;color:var(--muted);margin-top:.1rem}
+.how-section{padding:1.4rem 1rem;background:var(--white);margin-bottom:.5rem}
+.how-section h2{font-size:.9rem;font-weight:800;margin-bottom:1rem;color:var(--text)}
+.how-step{display:flex;gap:.8rem;align-items:flex-start;margin-bottom:.8rem}
+.how-num{width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.how-txt h4{font-size:.84rem;font-weight:700;color:var(--text)}
+.how-txt p{font-size:.75rem;color:var(--muted);margin-top:.1rem}
+.landing-footer{background:var(--green-dark);padding:1.5rem 1rem;text-align:center}
+.landing-footer p{font-size:.75rem;color:rgba(255,255,255,.5)}
+.landing-footer .admin-link{color:rgba(255,255,255,.25);cursor:pointer;font-size:.7rem;margin-top:.5rem;display:block}
+</style>
+</head>
+<body>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: SPLASH (auth check)
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-splash" class="screen active" style="align-items:center;justify-content:center;background:var(--green-dark)">
+  <div style="text-align:center">
+    <div style="font-size:3rem;font-weight:900;color:#fff;letter-spacing:-.04em">e<span style="color:var(--green-bright)">P</span>rints</div>
+    <div class="spinner" style="border-top-color:#fff;border-color:rgba(255,255,255,.2);margin-top:1.5rem"></div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: LANDING
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-landing" class="screen">
+  <div class="screen-body">
+    <div class="landing-hero">
+      <div class="hero-pill">✦ Nigeria's Custom Tee Store</div>
+      <div class="hero-title">e<span class="accent">P</span>rints</div>
+      <p class="hero-sub">Custom T-shirts printed to perfection.<br/>Order in minutes, delivered to your door.</p>
+      <button class="hero-cta" onclick="goto('s-auth')">Start Your Order →</button>
+    </div>
+    <div class="feat-strip">
+      <div class="feat"><div class="fi">🎨</div><div class="ft">Custom Print</div><div class="fs">Your design</div></div>
+      <div class="feat"><div class="fi">💰</div><div class="ft">From ₦5,000</div><div class="fs">Best price</div></div>
+      <div class="feat"><div class="fi">🚀</div><div class="ft">Fast Delivery</div><div class="fs">Quick turnaround</div></div>
+    </div>
+    <div class="how-section">
+      <h2>How It Works</h2>
+      <div class="how-step"><div class="how-num">1</div><div class="how-txt"><h4>Choose Your Style</h4><p>Pick size, colour, quantity and upload your design</p></div></div>
+      <div class="how-step"><div class="how-num">2</div><div class="how-txt"><h4>Make Payment</h4><p>Transfer to our account and upload your receipt</p></div></div>
+      <div class="how-step"><div class="how-num">3</div><div class="how-txt"><h4>Track Your Order</h4><p>Watch your order status update in real time</p></div></div>
+      <div class="how-step"><div class="how-num">4</div><div class="how-txt"><h4>Get Delivered</h4><p>We contact you on WhatsApp when it's ready</p></div></div>
+    </div>
+    <div class="landing-footer">
+      <p>© 2025 ePrints. All rights reserved.</p>
+      <a class="admin-link" onclick="goto('s-admin-login')">Admin Access</a>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: AUTH
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-auth" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-logo">e<b>P</b>rints</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="screen-body">
+    <div class="wrap" style="max-width:440px">
+      <div class="auth-tabs" style="margin-top:.5rem">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Log In</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="form-login">
+        <div class="card"><div class="card-inner">
+          <p style="font-size:1.2rem;font-weight:800;margin-bottom:.2rem">Welcome back 👋</p>
+          <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.1rem">Log in to access your orders and profile.</p>
+          <div class="field"><label>Email</label><input id="li-email" type="email" placeholder="you@email.com"/></div>
+          <div class="field"><label>Password</label><input id="li-pass" type="password" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+          <p class="err" id="li-err"></p>
+          <button class="btn btn-primary" id="li-btn" onclick="doLogin()" style="margin-top:.6rem">Log In</button>
+        </div></div>
+        <p style="text-align:center;font-size:.8rem;color:var(--muted);margin-top:.6rem">No account? <a onclick="switchTab('signup')" style="color:var(--green);cursor:pointer;font-weight:600">Sign Up →</a></p>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="form-signup" style="display:none">
+        <div class="card"><div class="card-inner">
+          <p style="font-size:1.2rem;font-weight:800;margin-bottom:.2rem">Create Account 🎉</p>
+          <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.1rem">Join ePrints and start ordering today.</p>
+          <div class="field"><label>Full Name</label><input id="su-name" type="text" placeholder="Your full name"/></div>
+          <div class="field"><label>Email</label><input id="su-email" type="email" placeholder="you@email.com"/></div>
+          <div class="field"><label>Phone</label><input id="su-phone" type="tel" placeholder="08012345678"/></div>
+          <div class="field"><label>Password</label><input id="su-pass" type="password" placeholder="Min. 6 characters"/></div>
+          <div class="field"><label>Confirm Password</label><input id="su-pass2" type="password" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doSignup()"/></div>
+          <p class="err" id="su-err"></p>
+          <button class="btn btn-primary" id="su-btn" onclick="doSignup()" style="margin-top:.6rem">Create Account</button>
+        </div></div>
+        <p style="text-align:center;font-size:.8rem;color:var(--muted);margin-top:.6rem">Have an account? <a onclick="switchTab('login')" style="color:var(--green);cursor:pointer;font-weight:600">Log In →</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: HOME (dashboard)
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-home" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo" style="text-align:left">e<b>P</b>rints</div>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <button class="topbar-action filled" onclick="goto('s-order')">+ Order</button>
+      <div id="home-avatar" onclick="gotoTab('profile')" style="width:34px;height:34px;border-radius:50%;background:var(--green-light);border:2px solid var(--green);overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;flex-shrink:0">👤
+        <img id="home-avatar-img" src="" style="width:100%;height:100%;object-fit:cover;display:none"/>
+      </div>
+    </div>
+  </div>
+  <div class="screen-body" id="home-body">
+    <!-- Greeting + orders loaded here -->
+    <div class="wrap">
+      <div style="margin-bottom:1rem">
+        <p style="font-size:1.1rem;font-weight:800;color:var(--text)">Welcome back, <span id="home-name">there</span> 👋</p>
+        <p style="font-size:.8rem;color:var(--muted);margin-top:.15rem">Here are your recent orders</p>
+      </div>
+      <div id="home-orders"><div class="spinner"></div></div>
+      <button class="btn btn-outline" onclick="goto('s-order')" style="margin-top:.5rem">+ Place New Order</button>
+    </div>
+  </div>
+  <div class="bottom-bar visible" id="main-bottom">
+    <button class="tab-item active" id="btab-home" onclick="gotoTab('home')"><span class="tab-icon">🏠</span><span class="tab-label">Home</span><div class="tab-dot"></div></button>
+    <button class="tab-item" id="btab-orders" onclick="gotoTab('orders')"><span class="tab-icon">📦</span><span class="tab-label">Orders</span><div class="tab-dot"></div></button>
+    <button class="tab-item" id="btab-chat" onclick="gotoTab('chat')"><span class="tab-icon">💬<span class="tab-notif" id="chat-notif-dot"></span></span><span class="tab-label">Support</span><div class="tab-dot"></div></button>
+    <button class="tab-item" id="btab-profile" onclick="gotoTab('profile')"><span class="tab-icon">👤</span><span class="tab-label">Profile</span><div class="tab-dot"></div></button>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: ORDERS
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-orders" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="gotoTab('home')">←</button>
+    <div class="topbar-title">My Orders</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="screen-body">
+    <div class="wrap">
+      <p class="pg-sub" id="orders-sub" style="font-size:.8rem;color:var(--muted);margin-bottom:1rem"></p>
+      <div id="orders-list"><div class="spinner"></div></div>
+    </div>
+  </div>
+  <div class="bottom-bar visible">
+    <button class="tab-item" onclick="gotoTab('home')"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+    <button class="tab-item active"><span class="tab-icon">📦</span><span class="tab-label">Orders</span><div class="tab-dot"></div></button>
+    <button class="tab-item" onclick="gotoTab('chat')"><span class="tab-icon">💬</span><span class="tab-label">Support</span></button>
+    <button class="tab-item" onclick="gotoTab('profile')"><span class="tab-icon">👤</span><span class="tab-label">Profile</span></button>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: CHAT (Support)
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-chat" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="gotoTab('home')">←</button>
+    <div class="topbar-title">Support</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="screen-body" id="chat-scroll">
+    <div class="wrap" style="padding-top:.9rem">
+      <!-- Tab switcher: 2 tabs only -->
+      <div class="support-tabs">
+        <button class="support-tab active" id="stab-human" onclick="switchSupportTab('human')">💬 Live Chat</button>
+        <button class="support-tab" id="stab-wa" onclick="switchSupportTab('wa')">📲 WhatsApp</button>
+      </div>
+
+      <!-- LIVE CHAT TAB -->
+      <div class="support-tab-pane active" id="spane-human">
+        <div style="background:var(--green-dark);border-radius:12px 12px 0 0;padding:.8rem 1rem;display:flex;align-items:center;gap:.6rem">
+          <span style="font-size:1.1rem">💬</span>
+          <div>
+            <div style="font-size:.85rem;font-weight:700;color:#fff">Live Chat with ePrints</div>
+            <div style="font-size:.67rem;color:rgba(255,255,255,.65)">We reply within a few hours</div>
+          </div>
+        </div>
+        <div id="chat-msgs" class="chat-area" style="border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;background:var(--bg)"><div class="no-msg">👋 Send a message and we'll reply soon!</div></div>
+        <div style="display:flex;gap:.5rem;padding:.8rem;border:1px solid var(--border);border-top:none;background:var(--white);border-radius:0 0 12px 12px;margin-top:-1px">
+          <input class="chat-input" id="chat-input" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="chat-send" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+
+      <!-- WHATSAPP TAB -->
+      <div class="support-tab-pane" id="spane-wa">
+        <div class="wa-support-card">
+          <div class="wa-badge">● WhatsApp</div>
+          <h3>Chat Directly on WhatsApp</h3>
+          <p>Fill in your details and we'll open WhatsApp with a pre-filled message so we can help you faster.</p>
+          <div class="field"><label>Your Name</label><input id="wa-name" type="text" placeholder="Your full name"/></div>
+          <div class="field"><label>Order ID (optional)</label><input id="wa-id" type="text" placeholder="e.g. 12345"/></div>
+          <div class="field"><label>Your Question / Complaint</label><textarea id="wa-msg" style="min-height:70px" placeholder="What do you need help with?…"></textarea></div>
+          <button class="btn btn-primary" onclick="openWA()" style="background:#25D366;box-shadow:0 4px 20px rgba(37,211,102,.3)">Open WhatsApp 📲</button>
+        </div>
+        <div class="card"><div class="card-inner">
+          <p style="font-size:.78rem;color:var(--muted);line-height:1.7">📞 Or save our number and message us directly:<br/><b style="color:var(--green);font-size:.92rem">+234 810 341 4603</b></p>
+        </div></div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar visible">
+    <button class="tab-item" onclick="gotoTab('home')"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+    <button class="tab-item" onclick="gotoTab('orders')"><span class="tab-icon">📦</span><span class="tab-label">Orders</span></button>
+    <button class="tab-item active"><span class="tab-icon">💬</span><span class="tab-label">Support</span><div class="tab-dot"></div></button>
+    <button class="tab-item" onclick="gotoTab('profile')"><span class="tab-icon">👤</span><span class="tab-label">Profile</span></button>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: PROFILE
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-profile" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="gotoTab('home')">←</button>
+    <div class="topbar-title">Profile</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="screen-body">
+    <div class="avatar-section">
+      <div class="avatar-wrap">
+        <div class="avatar-circle" id="prof-avatar">👤<img id="prof-avatar-img" src="" alt=""/></div>
+        <div class="avatar-edit-btn">✏️<input type="file" accept="image/*" onchange="uploadAvatar(this)"/></div>
+      </div>
+      <div class="avatar-name" id="prof-display-name">—</div>
+      <div class="avatar-email" id="prof-display-email">—</div>
+    </div>
+    <div class="wrap">
+      <div class="section-label">Personal Info</div>
+      <div class="card"><div class="card-inner">
+        <div class="field"><label>Full Name</label><input id="pf-name" type="text" placeholder="Your full name"/></div>
+        <div class="field"><label>Phone Number</label><input id="pf-phone" type="tel" placeholder="08012345678"/></div>
+        <div class="field"><label>WhatsApp Number</label><input id="pf-whatsapp" type="tel" placeholder="08012345678"/></div>
+        <div class="field"><label>Delivery Address</label><textarea id="pf-address" placeholder="Your default delivery address…"></textarea></div>
+        <div class="field"><label>Email (cannot change)</label><input id="pf-email" type="email" disabled/></div>
+      </div></div>
+      <p class="err" id="pf-err"></p>
+      <p class="ok" id="pf-ok"></p>
+      <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="doLogout()" style="margin-top:.5rem">Log Out</button>
+    </div>
+  </div>
+  <div class="bottom-bar visible">
+    <button class="tab-item" onclick="gotoTab('home')"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+    <button class="tab-item" onclick="gotoTab('orders')"><span class="tab-icon">📦</span><span class="tab-label">Orders</span></button>
+    <button class="tab-item" onclick="gotoTab('chat')"><span class="tab-icon">💬</span><span class="tab-label">Support</span></button>
+    <button class="tab-item active"><span class="tab-icon">👤</span><span class="tab-label">Profile</span><div class="tab-dot"></div></button>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: ORDER STEP 1
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-order" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-title">New Order</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="screen-body">
+    <div class="wrap">
+      <div class="section-label">Step 1 of 2 — Customise Your Tee</div>
+
+      <!-- SIZE -->
+      <div class="card"><div class="card-inner">
+        <div class="card-title" style="margin-bottom:.8rem;font-size:.88rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.4rem"><span style="width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center">1</span> Shirt Size</div>
+        <div class="size-row">
+          <button class="size-pill" onclick="selSize(this,'Small')">Small</button>
+          <button class="size-pill" onclick="selSize(this,'Medium')">Medium</button>
+          <button class="size-pill" onclick="selSize(this,'Large')">Large</button>
+          <button class="size-pill" onclick="selSize(this,'Extra Large')">Extra Large</button>
+        </div>
+      </div></div>
+
+      <!-- COLOUR -->
+      <div class="card"><div class="card-inner">
+        <div class="card-title" style="margin-bottom:.6rem;font-size:.88rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.4rem"><span style="width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center">2</span> Shirt Colour</div>
+        <div class="colour-wrap">
+          <div style="text-align:center"><div class="swatch" style="background:#1a1a1a" data-label="Black" onclick="selColour(this,'Black','#1a1a1a')"></div><div class="colour-name" style="color:var(--muted);font-size:.58rem">Black</div></div>
+          <div style="text-align:center"><div class="swatch" style="background:#f0f0f0;border:2px solid #ddd" data-label="White" onclick="selColour(this,'White','#f0f0f0')"></div><div class="colour-name" style="color:var(--muted);font-size:.58rem">White</div></div>
+          <div style="text-align:center"><div class="swatch" style="background:#1565c0" data-label="Blue" onclick="selColour(this,'Blue','#1565c0')"></div><div class="colour-name" style="color:var(--muted);font-size:.58rem">Blue</div></div>
+          <div style="text-align:center"><div class="swatch" style="background:#2e7d32" data-label="Green" onclick="selColour(this,'Green','#2e7d32')"></div><div class="colour-name" style="color:var(--muted);font-size:.58rem">Green</div></div>
+          <div style="text-align:center"><div class="swatch" style="background:#c62828" data-label="Red" onclick="selColour(this,'Red','#c62828')"></div><div class="colour-name" style="color:var(--muted);font-size:.58rem">Red</div></div>
+          <div style="text-align:center"><div class="swatch" style="background:#ad1457" data-label="Pink" onclick="selColour(this,'Pink','#ad1457')"></div><div class="colour-name" style="color:var(--muted);font-size:.58rem">Pink</div></div>
+          <div style="text-align:center"><div class="swatch" style="background:#f57f17" data-label="Yellow" onclick="selColour(this,'Yellow','#f57f17')"></div><div class="colour-name" style="color:var(--muted);font-size:.58rem">Yellow</div></div>
+          <div style="text-align:center"><div class="swatch" style="background:#4a148c" data-label="Purple" onclick="selColour(this,'Purple','#4a148c')"></div><div class="colour-name" style="color:var(--muted);font-size:.58rem">Purple</div></div>
+        </div>
+        <p id="colour-chosen" style="font-size:.76rem;color:var(--green);font-weight:600;margin-top:-.5rem"></p>
+      </div></div>
+
+      <!-- QUANTITY -->
+      <div class="card"><div class="card-inner">
+        <div class="card-title" style="margin-bottom:.7rem;font-size:.88rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.4rem"><span style="width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center">3</span> Number of Shirts</div>
+        <div class="field" style="margin:0"><input id="qty" type="number" min="1" max="999" value="1" oninput="updatePrice()"/></div>
+      </div></div>
+
+      <!-- DESIGN -->
+      <div class="card"><div class="card-inner">
+        <div class="card-title" style="margin-bottom:.7rem;font-size:.88rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.4rem"><span style="width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center">4</span> Design <span style="font-size:.72rem;color:var(--muted);font-weight:400">(Optional · +₦3,000)</span></div>
+        <div class="upload-zone" id="uz-design">
+          <input type="file" id="design-file" accept="image/*" onchange="handleUpload(this,'design')"/>
+          <div class="uz-icon" id="uz-design-icon">🖼️</div>
+          <p><strong>Tap to upload</strong> your design</p>
+          <p style="margin-top:.2rem">PNG, JPG · Skip for plain shirt</p>
+          <div class="prog-bar" id="dz-bar"><div class="prog-fill" id="dz-fill"></div></div>
+          <p class="uz-status" id="dz-status"></p>
+          <img class="uz-thumb" id="dz-thumb" alt=""/>
+        </div>
+        <button id="clear-design" class="btn btn-ghost" onclick="clearDesign()" style="display:none;margin-top:.5rem;padding:.5rem;font-size:.75rem">✕ Remove Design</button>
+        <div id="print-desc-wrap" style="display:none;margin-top:.8rem">
+          <div class="field" style="margin:0">
+            <label>Print Instructions</label>
+            <div style="font-size:.72rem;color:#e65100;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:.45rem .75rem;margin-bottom:.45rem;line-height:1.5">💡 Describe position, ink colour, text to include, print size</div>
+            <textarea id="print-desc" placeholder="e.g. Front-center, large, white ink…"></textarea>
+          </div>
+        </div>
+      </div></div>
+
+      <!-- DELIVERY -->
+      <div class="card"><div class="card-inner">
+        <div class="card-title" style="margin-bottom:.7rem;font-size:.88rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.4rem"><span style="width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center" id="step-del">5</span> Delivery Info</div>
+        <div class="field"><label>WhatsApp Number</label><input id="wa-num" type="tel" placeholder="08012345678"/></div>
+        <div class="field" style="margin:0"><label>Delivery Address</label><textarea id="del-addr" style="min-height:70px" placeholder="Your full delivery address…"></textarea></div>
+      </div></div>
+
+      <!-- PRICE -->
+      <div class="card" style="overflow:hidden;margin-bottom:1rem">
+        <div style="background:linear-gradient(135deg,var(--green-light),#e0f7fa);padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.2rem">Total</div>
+            <div style="font-size:.78rem;color:var(--muted)" id="price-break">1× Plain: ₦5,000</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:.72rem;color:var(--muted)">₦</div>
+            <div style="font-size:1.7rem;font-weight:900;color:var(--green);letter-spacing:-.03em" id="price-amt">5,000</div>
+          </div>
+        </div>
+      </div>
+
+      <p class="err" id="order-err"></p>
+      <button class="btn btn-primary" onclick="proceedToPayment()">Continue to Payment →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: PAYMENT
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-payment" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-title">Payment</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="screen-body">
+    <div class="wrap">
+      <div class="section-label">Step 2 of 2 — Complete Payment</div>
+
+      <!-- Order summary -->
+      <div class="card" style="margin-bottom:.75rem">
+        <div style="padding:.7rem 1rem;background:var(--bg);border-bottom:1px solid var(--border)">
+          <span style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Order Summary</span>
+        </div>
+        <div class="pay-detail"><span class="k">Size</span><span class="v" id="sum-size">—</span></div>
+        <div class="pay-detail"><span class="k">Colour</span><span class="v" id="sum-colour">—</span></div>
+        <div class="pay-detail"><span class="k">Quantity</span><span class="v" id="sum-qty">—</span></div>
+        <div class="pay-detail"><span class="k">Type</span><span class="v" id="sum-type">—</span></div>
+        <div class="pay-detail"><span class="k">Total Amount</span><span class="v" id="sum-total" style="color:var(--green);font-size:1rem;font-weight:800">—</span></div>
+      </div>
+
+      <!-- Bank details -->
+      <div class="payment-atm-card">
+        <svg class="atm-circuit" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="40" x2="80" y2="40" stroke="#fff" stroke-width="1.5"/>
+          <line x1="80" y1="40" x2="80" y2="90" stroke="#fff" stroke-width="1.5"/>
+          <line x1="80" y1="90" x2="160" y2="90" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="80" cy="40" r="3" fill="#fff"/><circle cx="80" cy="90" r="3" fill="#fff"/>
+          <circle cx="160" cy="90" r="3" fill="#fff"/>
+          <line x1="160" y1="90" x2="160" y2="150" stroke="#fff" stroke-width="1.5"/>
+          <line x1="160" y1="150" x2="300" y2="150" stroke="#fff" stroke-width="1.5"/>
+          <line x1="240" y1="40" x2="300" y2="40" stroke="#fff" stroke-width="1.5"/>
+          <line x1="240" y1="40" x2="240" y2="130" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="240" cy="130" r="3" fill="#fff"/>
+          <line x1="0" y1="130" x2="100" y2="130" stroke="#fff" stroke-width="1"/>
+          <line x1="100" y1="130" x2="100" y2="180" stroke="#fff" stroke-width="1"/>
+          <circle cx="100" cy="130" r="2" fill="#fff"/>
+          <rect x="60" y="28" width="8" height="8" rx="1" fill="none" stroke="#fff" stroke-width="1"/>
+          <rect x="220" y="60" width="8" height="8" rx="1" fill="none" stroke="#fff" stroke-width="1"/>
+        </svg>
+        <div class="atm-shimmer"></div>
+        <div class="atm-strip"></div>
+        <div class="payment-atm-chip"></div>
+        <div class="payment-atm-title">ePrints · Moniepoint</div>
+        <div class="payment-atm-number">8103 4146 03</div>
+        <div class="payment-atm-row">
+          <div>
+            <div class="payment-atm-label">Account Name</div>
+            <div class="payment-atm-value" style="font-size:.74rem;max-width:140px;line-height:1.3">Emmanuel David Osagie Omoruyi</div>
+          </div>
+          <div style="text-align:right">
+            <div class="payment-atm-label">Amount Due</div>
+            <div class="payment-atm-value" id="pay-amt" style="font-size:1.1rem;color:#a5ffdc">₦—</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="copyTxt('8103414603',this)" style="margin-bottom:.8rem">Copy Account Number</button>
+
+      <!-- Receipt upload -->
+      <div class="card">
+        <div style="padding:.7rem 1rem;border-bottom:1px solid var(--border)">
+          <span style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">📸 Upload Payment Receipt</span>
+        </div>
+        <div class="card-inner">
+          <div style="font-size:.72rem;color:#e65100;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:.45rem .75rem;margin-bottom:.7rem;line-height:1.5">Take a screenshot of your bank transfer and upload it here.</div>
+          <div class="upload-zone" id="uz-receipt">
+            <input type="file" id="receipt-file" accept="image/*" onchange="handleUpload(this,'receipt')"/>
+            <div class="uz-icon" id="uz-receipt-icon">🧾</div>
+            <p><strong>Tap to upload</strong> your receipt</p>
+            <div class="prog-bar" id="rz-bar"><div class="prog-fill" id="rz-fill"></div></div>
+            <p class="uz-status" id="rz-status"></p>
+            <img class="uz-thumb" id="rz-thumb" alt=""/>
+          </div>
+        </div>
+      </div>
+
+      <p class="err" id="pay-err"></p>
+      <button class="btn btn-primary" id="place-btn" onclick="placeOrder()">Place Order 🎉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: ADMIN LOGIN
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-admin-login" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-title">Admin Login</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="screen-body" style="display:flex;align-items:center;justify-content:center">
+    <div class="wrap" style="max-width:400px">
+      <div class="card"><div class="card-inner">
+        <p style="font-size:1.1rem;font-weight:800;margin-bottom:.2rem">🔐 Admin Access</p>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem">Enter password to manage all orders.</p>
+        <div class="field"><label>Password</label><input id="adm-pass" type="password" placeholder="Admin password" onkeydown="if(event.key==='Enter')adminLogin()"/></div>
+        <p class="err" id="adm-err"></p>
+        <button class="btn btn-primary" onclick="adminLogin()">Enter Dashboard</button>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: ADMIN DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-admin" class="screen">
+  <div class="topbar" style="background:var(--green-dark)">
+    <div class="topbar-logo" style="color:#fff;text-align:left;font-size:1.1rem">ePrints <span style="font-size:.62rem;background:rgba(255,255,255,.2);padding:.12rem .5rem;border-radius:50px;font-weight:600;letter-spacing:.06em">ADMIN</span></div>
+    <div style="display:flex;gap:.4rem">
+      <button class="topbar-action" style="border-color:rgba(255,255,255,.4);color:#fff;font-size:.72rem" onclick="goto('s-admin-chat')">💬 Chats</button>
+      <button class="topbar-action" style="border-color:rgba(255,255,255,.4);color:#fff;font-size:.72rem" onclick="goBack()">✕ Exit</button>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="wrap" style="max-width:900px">
+      <div class="admin-stat-grid" id="admin-stats">
+        <div class="stat-box"><div class="stat-num" id="st-total">–</div><div class="stat-lab">Total Orders</div></div>
+        <div class="stat-box"><div class="stat-num" id="st-pending">–</div><div class="stat-lab">Pending</div></div>
+        <div class="stat-box"><div class="stat-num" id="st-progress">–</div><div class="stat-lab">In Progress</div></div>
+        <div class="stat-box"><div class="stat-num" id="st-done">–</div><div class="stat-lab">Completed</div></div>
+      </div>
+      <div class="chip-row">
+        <button class="chip active" onclick="filterAdmin('all',this)">All</button>
+        <button class="chip" onclick="filterAdmin('pending',this)">Pending</button>
+        <button class="chip" onclick="filterAdmin('progress',this)">In Progress</button>
+        <button class="chip" onclick="filterAdmin('done',this)">Done</button>
+        <button class="chip" onclick="filterAdmin('ready',this)">Ready</button>
+      </div>
+      <div id="admin-list"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━
+  SCREEN: ADMIN CHAT
+━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="s-admin-chat" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goBack()">←</button>
+    <div class="topbar-title" id="admin-chat-title">Customer Chats</div>
+    <div class="topbar-spacer"></div>
+  </div>
+  <div class="screen-body" id="admin-chat-scroll">
+    <div id="admin-chat-msgs" class="chat-area"><div class="no-msg">Select a customer order and tap "Chat" to reply</div></div>
+    <div class="wrap" style="padding-top:0" id="admin-chat-list-wrap">
+      <div class="section-label">All Conversations</div>
+      <div id="admin-chat-list"><div class="spinner"></div></div>
+    </div>
+  </div>
+  <div class="chat-input-bar" id="admin-chat-bar" style="display:none">
+    <input class="chat-input" id="admin-chat-input" placeholder="Reply as ePrints team…" onkeydown="if(event.key==='Enter')adminSendMsg()"/>
+    <button class="chat-send" onclick="adminSendMsg()">➤</button>
+  </div>
+</div>
+
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-bg" id="order-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Order Details</div>
+    <div id="modal-body"></div>
+    <button class="btn btn-ghost" onclick="closeModal()" style="margin-top:.8rem">Close</button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div id="success-overlay">
+  <div class="success-ring"><div class="success-check">✓</div></div>
+  <p class="success-title">Order Placed! 🎉</p>
+  <p class="success-sub">Saved successfully. We'll confirm your payment and start working on your tee!</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyAKcrDQDYlqDvO1V7aTsFJELP33DcVx_C8",
+  authDomain:"eprint-18e9c.firebaseapp.com",
+  projectId:"eprint-18e9c",
+  storageBucket:"eprint-18e9c.firebasestorage.app",
+  messagingSenderId:"384285763588",
+  appId:"1:384285763588:web:20a984563f99ef50c5ed51"
+});
+var auth=firebase.auth(), db=firebase.firestore();
+// Keep users signed in between browser/app sessions
+try{auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);}catch(e){}
+var CLOUD='dsfptdhag', PRESET='mzqs2c5t', ADMIN_PASS='eprintS@2026', WA='2348103414603';
+
+// ── STATE ──
+var user=null;
+var stack=['s-splash'];
+var orderSize='',orderColour='',orderHex='',orderQty=1;
+var fileURL='',fileName='',receiptURL='';
+var uploading=false,uploadingR=false;
+var allOrders=[],adminFilter='all';
+var chatUnsub=null,adminChatUid=null,adminChatUnsub=null;
+
+// ── AUTH CHECK ON LOAD ──
+var chatNotifUnsub=null;
+auth.onAuthStateChanged(function(u){
+  user=u;
+  if(u){
+    updateUserUI(u);
+    loadUserProfile();
+    goto('s-home');
+    loadHomeOrders();
+    watchChatForUnread(u);
+  } else {
+    goto('s-landing');
+    if(chatNotifUnsub){chatNotifUnsub();chatNotifUnsub=null;}
+  }
+});
+
+// ── UNREAD DOT — watch for new admin messages ──
+function watchChatForUnread(u){
+  if(chatNotifUnsub) chatNotifUnsub();
+  chatNotifUnsub=db.collection('chats').doc(u.uid)
+    .onSnapshot(function(doc){
+      if(!doc.exists) return;
+      var d=doc.data();
+      // Show dot if last message was from admin and chat screen is not currently open
+      var chatOpen=document.getElementById('s-chat').classList.contains('active');
+      if(d.lastRole==='admin' && !chatOpen){
+        document.getElementById('chat-notif-dot').classList.add('show');
+      }
+    });
+}
+
+function clearChatNotif(){
+  document.getElementById('chat-notif-dot').classList.remove('show');
+  // Mark last role as read so dot doesn't reappear
+  if(user){
+    db.collection('chats').doc(user.uid).set({lastRole:'user'},{merge:true});
+  }
+}
+
+function updateUserUI(u){
+  var name=u.displayName||u.email.split('@')[0];
+  var el=document.getElementById('home-name');
+  if(el) el.textContent=name;
+  var n2=document.getElementById('prof-display-name');
+  if(n2) n2.textContent=name;
+  var e2=document.getElementById('prof-display-email');
+  if(e2) e2.textContent=u.email;
+  var pe=document.getElementById('pf-email');
+  if(pe) pe.value=u.email;
+}
+
+// ── NAVIGATION ──
+function goto(id){
+  var next=document.getElementById(id);
+  if(!next) return;
+
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.remove('active');
+  });
+
+  next.classList.add('active');
+
+  if(stack[stack.length-1]!==id){
+    stack.push(id);
+    history.pushState({s:id},'');
+  }
+
+  next.querySelector('.screen-body')?.scrollTo(0,0);
+}
+
+function goBack(){
+  if(stack.length>1){
+    stack.pop();
+    var prev=stack[stack.length-1];
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+    document.getElementById(prev).classList.add('active');
+    window.scrollTo(0,0);
+  }
+}
+
+window.addEventListener('popstate',function(){
+  if(stack.length>1){
+    stack.pop();
+    var prev=stack[stack.length-1];
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+    var el=document.getElementById(prev);
+    if(el) el.classList.add('active');
+  } else {
+    history.pushState({s:'s-landing'},'');
+  }
+});
+
+// ── TAB NAVIGATION ──
+function gotoTab(tab){
+  var map={home:'s-home',orders:'s-orders',chat:'s-chat',profile:'s-profile'};
+  var id=map[tab];
+  goto(id);
+  if(tab==='orders'){loadOrders();}
+  if(tab==='chat'){loadChat(); clearChatNotif();}
+  if(tab==='profile'){loadUserProfile();}
+  if(tab==='home'){loadHomeOrders();}
+  // Update active tab highlight
+  ['home','orders','chat','profile'].forEach(function(t){
+    var btn=document.getElementById('btab-'+t);
+    if(btn) btn.classList.toggle('active',t===tab);
+  });
+}
+
+// ── AUTH ──
+function switchTab(t){
+  var isL=(t==='login');
+  document.getElementById('tab-login').classList.toggle('active',isL);
+  document.getElementById('tab-signup').classList.toggle('active',!isL);
+  document.getElementById('form-login').style.display=isL?'block':'none';
+  document.getElementById('form-signup').style.display=isL?'none':'block';
+  document.getElementById('li-err').textContent='';
+  document.getElementById('su-err').textContent='';
+}
+
+function doLogin(){
+  var email=document.getElementById('li-email').value.trim();
+  var pass=document.getElementById('li-pass').value;
+  var err=document.getElementById('li-err');
+  var btn=document.getElementById('li-btn');
+  err.textContent='';
+  if(!email||!pass){err.textContent='Please fill in all fields.';return;}
+  btn.disabled=true;btn.textContent='Logging in…';
+  auth.signInWithEmailAndPassword(email,pass)
+    .then(function(){
+      btn.disabled=false;btn.textContent='Log In';
+      document.getElementById('li-pass').value='';
+      goto('s-home');loadHomeOrders();
+    })
+    .catch(function(e){
+      btn.disabled=false;btn.textContent='Log In';
+      if(e.code==='auth/user-not-found'||e.code==='auth/invalid-credential') err.textContent='No account with this email.';
+      else if(e.code==='auth/wrong-password') err.textContent='Wrong password.';
+      else err.textContent='Login failed. Try again.';
+    });
+}
+
+function doSignup(){
+  var name=document.getElementById('su-name').value.trim();
+  var email=document.getElementById('su-email').value.trim();
+  var phone=document.getElementById('su-phone').value.trim();
+  var pass=document.getElementById('su-pass').value;
+  var pass2=document.getElementById('su-pass2').value;
+  var err=document.getElementById('su-err');
+  var btn=document.getElementById('su-btn');
+  err.textContent='';
+  if(!name||!email||!pass||!pass2){err.textContent='Please fill in all fields.';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters.';return;}
+  if(pass!==pass2){err.textContent='Passwords do not match.';return;}
+  btn.disabled=true;btn.textContent='Creating account…';
+  auth.createUserWithEmailAndPassword(email,pass)
+    .then(function(c){
+      return c.user.updateProfile({displayName:name}).then(function(){
+        return db.collection('users').doc(c.user.uid).set({name:name,email:email,phone:phone,whatsapp:'',address:'',avatarURL:'',createdAt:Date.now()});
+      });
+    })
+    .then(function(){
+      btn.disabled=false;btn.textContent='Create Account';
+      ['su-name','su-email','su-phone','su-pass','su-pass2'].forEach(function(id){document.getElementById(id).value='';});
+      goto('s-home');loadHomeOrders();
+    })
+    .catch(function(e){
+      btn.disabled=false;btn.textContent='Create Account';
+      if(e.code==='auth/email-already-in-use') err.textContent='Email already registered. Please log in.';
+      else err.textContent='Sign up failed. Try again.';
+    });
+}
+
+function doLogout(){
+  auth.signOut().then(function(){user=null;stack=['s-landing'];goto('s-landing');});
+}
+
+// ── PROFILE ──
+function loadUserProfile(){
+  if(!user) return;
+  document.getElementById('pf-email').value=user.email;
+  document.getElementById('prof-display-email').textContent=user.email;
+  db.collection('users').doc(user.uid).get().then(function(doc){
+    if(!doc.exists) return;
+    var d=doc.data();
+    document.getElementById('pf-name').value=d.name||'';
+    document.getElementById('pf-phone').value=d.phone||'';
+    document.getElementById('pf-whatsapp').value=d.whatsapp||'';
+    document.getElementById('pf-address').value=d.address||'';
+    document.getElementById('prof-display-name').textContent=d.name||user.email;
+    document.getElementById('home-name').textContent=d.name||user.email.split('@')[0];
+    // Set avatar everywhere
+    if(d.avatarURL){
+      setAvatar(d.avatarURL);
+    }
+    // Pre-fill order form
+    if(d.whatsapp) document.getElementById('wa-num').value=d.whatsapp;
+    if(d.address) document.getElementById('del-addr').value=d.address;
+  });
+}
+
+function setAvatar(url){
+  ['prof-avatar-img','home-avatar-img'].forEach(function(id){
+    var img=document.getElementById(id);
+    if(img){
+      img.src=url;
+      img.style.display='block';
+    }
+  });
+
+  var prof=document.getElementById('prof-avatar');
+  var home=document.getElementById('home-avatar');
+
+  if(prof) prof.style.backgroundImage='url('+url+')';
+  if(home) home.style.backgroundImage='url('+url+')';
+}
+
+function saveProfile(){
+  if(!user) return;
+  var name=document.getElementById('pf-name').value.trim();
+  var phone=document.getElementById('pf-phone').value.trim();
+  var whatsapp=document.getElementById('pf-whatsapp').value.trim();
+  var address=document.getElementById('pf-address').value.trim();
+  var err=document.getElementById('pf-err');
+  var ok=document.getElementById('pf-ok');
+  err.textContent='';ok.textContent='';
+  if(!name){err.textContent='Please enter your name.';return;}
+  db.collection('users').doc(user.uid).update({name:name,phone:phone,whatsapp:whatsapp,address:address})
+    .then(function(){return user.updateProfile({displayName:name});})
+    .then(function(){
+      ok.textContent='Saved!';
+      document.getElementById('prof-display-name').textContent=name;
+      document.getElementById('home-name').textContent=name;
+      setTimeout(function(){ok.textContent='';},2500);
+    })
+    .catch(function(){err.textContent='Save failed. Try again.';});
+}
+
+function uploadAvatar(input){
+  if(!input.files||!input.files[0]) return;
+  var file=input.files[0];
+  var fd=new FormData();
+  fd.append('file',file);fd.append('upload_preset',PRESET);fd.append('folder','eprints_avatars');
+  fetch('https://api.cloudinary.com/v1_1/'+CLOUD+'/image/upload',{method:'POST',body:fd})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.secure_url){
+        db.collection('users').doc(user.uid).set(
+          {avatarURL:data.secure_url},
+          {merge:true}
+        );
+        setAvatar(data.secure_url);
+      }
+    });
+}
+
+// ── ORDER FORM ──
+function selSize(btn,s){
+  document.querySelectorAll('.size-pill').forEach(function(b){b.classList.remove('sel');});
+  btn.classList.add('sel');orderSize=s;
+}
+function selColour(el,name,hex){
+  document.querySelectorAll('.swatch').forEach(function(s){s.classList.remove('sel');});
+  el.classList.add('sel');orderColour=name;orderHex=hex;
+  document.getElementById('colour-chosen').textContent='✓ '+name+' selected';
+}
+// ── PRICING (loaded from Firestore config — change in Firebase Console) ──
+var PRICE_PLAIN=5000, PRICE_CUSTOM=8000;
+db.collection('config').doc('pricing').get().then(function(doc){
+  if(doc.exists){
+    var d=doc.data();
+    if(d.plain) PRICE_PLAIN=d.plain;
+    if(d.custom) PRICE_CUSTOM=d.custom;
+    updatePrice(); // refresh display if order form already open
+  }
+}).catch(function(){});
+
+function updatePrice(){
+  var qty=parseInt(document.getElementById('qty').value)||1;
+  if(qty<1) qty=1;
+  orderQty=qty;
+  var hasDesign=(fileURL!=='');
+  var per=hasDesign?PRICE_CUSTOM:PRICE_PLAIN;
+  var total=per*qty;
+  document.getElementById('price-break').textContent=qty+'× '+(hasDesign?'Custom':'Plain')+': ₦'+total.toLocaleString();
+  document.getElementById('price-amt').textContent=total.toLocaleString();
+  document.getElementById('print-desc-wrap').style.display=hasDesign?'block':'none';
+  document.getElementById('clear-design').style.display=hasDesign?'block':'none';
+  document.getElementById('step-del').textContent=hasDesign?'5':'4';
+}
+function clearDesign(){
+  fileURL='';fileName='';
+  document.getElementById('uz-design').className='upload-zone';
+  document.getElementById('uz-design-icon').textContent='🖼️';
+  document.getElementById('dz-status').textContent='';
+  document.getElementById('dz-thumb').style.display='none';
+  document.getElementById('design-file').value='';
+  document.getElementById('dz-bar').style.display='none';
+  document.getElementById('dz-fill').style.width='0%';
+  updatePrice();
+}
+function copyTxt(txt,btn){
+  navigator.clipboard.writeText(txt).then(function(){
+    if(btn){var o=btn.textContent;btn.textContent='Copied!';setTimeout(function(){btn.textContent=o;},1500);}
+  });
+}
+
+// ── CLOUDINARY UPLOAD ──
+function handleUpload(input,type){
+  if(!input.files||!input.files[0]) return;
+  var file=input.files[0];
+  var isD=(type==='design');
+  var zoneId=isD?'uz-design':'uz-receipt';
+  var iconId=isD?'uz-design-icon':'uz-receipt-icon';
+  var statId=isD?'dz-status':'rz-status';
+  var barId =isD?'dz-bar':'rz-bar';
+  var fillId=isD?'dz-fill':'rz-fill';
+  var thumbId=isD?'dz-thumb':'rz-thumb';
+  var zone=document.getElementById(zoneId);
+  var icon=document.getElementById(iconId);
+  var stat=document.getElementById(statId);
+  var bar =document.getElementById(barId);
+  var fill=document.getElementById(fillId);
+  var thumb=document.getElementById(thumbId);
+  thumb.src=URL.createObjectURL(file);thumb.style.display='block';
+  if(isD)uploading=true;else uploadingR=true;
+  zone.className='upload-zone uploading';icon.textContent='📤';
+  stat.className='uz-status busy';stat.textContent='⏳ Uploading…';
+  bar.style.display='block';
+  var p=0;
+  var tick=setInterval(function(){p=Math.min(p+Math.random()*12,88);fill.style.width=p+'%';},180);
+  var fd=new FormData();
+  fd.append('file',file);fd.append('upload_preset',PRESET);
+  fd.append('folder',isD?'eprints_orders':'eprints_receipts');
+  fetch('https://api.cloudinary.com/v1_1/'+CLOUD+'/image/upload',{method:'POST',body:fd})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      clearInterval(tick);
+      if(data.secure_url){
+        fill.style.width='100%';
+        setTimeout(function(){
+          if(isD){fileURL=data.secure_url;fileName=file.name;uploading=false;updatePrice();}
+          else{receiptURL=data.secure_url;uploadingR=false;}
+          zone.className='upload-zone done';icon.textContent='✅';
+          stat.className='uz-status ok';stat.textContent='✓ '+file.name;
+          bar.style.display='none';
+        },300);
+      } else throw new Error();
+    })
+    .catch(function(){
+      clearInterval(tick);
+      if(isD)uploading=false;else uploadingR=false;
+      zone.className='upload-zone';
+      icon.textContent=isD?'🖼️':'🧾';
+      stat.className='uz-status bad';stat.textContent='❌ Upload failed. Tap to retry.';
+      bar.style.display='none';fill.style.width='0%';thumb.style.display='none';
+    });
+}
+
+// ── PROCEED TO PAYMENT ──
+function proceedToPayment(){
+  var waNum=document.getElementById('wa-num').value.trim();
+  var addr=document.getElementById('del-addr').value.trim();
+  var desc=document.getElementById('print-desc').value.trim();
+  var err=document.getElementById('order-err');
+  err.textContent='';
+  if(!user){err.textContent='⚠ Please log in first.';goto('s-auth');return;}
+  if(!orderSize){err.textContent='⚠ Please select a shirt size.';return;}
+  if(!orderColour){err.textContent='⚠ Please select a shirt colour.';return;}
+  if(uploading){err.textContent='⏳ Design still uploading…';return;}
+  if(fileURL&&!desc){err.textContent='⚠ Please add print instructions.';return;}
+  if(!waNum){err.textContent='⚠ Please enter your WhatsApp number.';return;}
+  if(!addr){err.textContent='⚠ Please enter your delivery address.';return;}
+  var qty=parseInt(document.getElementById('qty').value)||1;
+  var hasDesign=(fileURL!=='');
+  var per=hasDesign?8000:5000;
+  var total=per*qty;
+  document.getElementById('sum-size').textContent=orderSize;
+  document.getElementById('sum-colour').textContent=orderColour;
+  document.getElementById('sum-qty').textContent=qty+' shirt'+(qty>1?'s':'');
+  document.getElementById('sum-type').textContent=hasDesign?'Custom Print':'Plain Shirt';
+  document.getElementById('sum-total').textContent='₦'+total.toLocaleString();
+  document.getElementById('pay-amt').textContent='₦'+total.toLocaleString();
+  goto('s-payment');
+}
+
+// ── PLACE ORDER ──
+function placeOrder(){
+  var err=document.getElementById('pay-err');
+  var btn=document.getElementById('place-btn');
+  err.textContent='';
+  if(uploadingR){err.textContent='⏳ Receipt still uploading…';return;}
+  if(!receiptURL){err.textContent='⚠ Please upload your payment receipt.';return;}
+  btn.disabled=true;btn.textContent='Placing Order…';
+  var qty=parseInt(document.getElementById('qty').value)||1;
+  var hasDesign=(fileURL!=='');
+  var per=hasDesign?8000:5000;
+  var total=per*qty;
+  var orderId=String(Math.floor(10000+Math.random()*90000));
+  db.collection('users').doc(user.uid).get()
+    .then(function(doc){
+      var ud=doc.exists?doc.data():{};
+      return db.collection('orders').doc(orderId).set({
+        orderId:orderId,userId:user.uid,
+        userName:user.displayName||ud.name||'Customer',
+        userEmail:user.email,userPhone:ud.phone||'',
+        whatsapp:document.getElementById('wa-num').value.trim(),
+        delivery:document.getElementById('del-addr').value.trim(),
+        size:orderSize,colour:orderColour,colourHex:orderHex,
+        quantity:qty,designURL:fileURL||'',designName:fileName||'',
+        description:document.getElementById('print-desc').value.trim()||'',
+        orderType:hasDesign?'Custom (₦'+per.toLocaleString()+'/shirt)':'Plain (₦5,000/shirt)',
+        totalAmount:total,receiptURL:receiptURL,
+        status:'pending',paymentStatus:'pending',
+        createdAtMs:Date.now(),
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    })
+    .then(function(){
+      var ov=document.getElementById('success-overlay');
+      ov.classList.add('open');
+      setTimeout(function(){
+        ov.classList.remove('open');
+        btn.disabled=false;btn.textContent='Place Order 🎉';
+        // Reset form
+        orderSize='';orderColour='';orderHex='';orderQty=1;
+        fileURL='';fileName='';receiptURL='';
+        document.querySelectorAll('.size-pill').forEach(function(b){b.classList.remove('sel');});
+        document.querySelectorAll('.swatch').forEach(function(s){s.classList.remove('sel');});
+        document.getElementById('colour-chosen').textContent='';
+        document.getElementById('qty').value='1';
+        document.getElementById('print-desc').value='';
+        clearDesign();
+        document.getElementById('uz-receipt').className='upload-zone';
+        document.getElementById('uz-receipt-icon').textContent='🧾';
+        document.getElementById('rz-status').textContent='';
+        document.getElementById('rz-thumb').style.display='none';
+        document.getElementById('receipt-file').value='';
+        document.getElementById('rz-bar').style.display='none';
+        document.getElementById('rz-fill').style.width='0%';
+        updatePrice();
+        gotoTab('orders');
+      },2800);
+    })
+    .catch(function(e){
+      err.textContent='❌ Could not save. Check your connection.';
+      btn.disabled=false;btn.textContent='Place Order 🎉';
+      console.error(e);
+    });
+}
+
+// ── LOAD ORDERS (home snippet) ──
+function loadHomeOrders(){
+  if(!user) return;
+  var list=document.getElementById('home-orders');
+  list.innerHTML='<div class="spinner"></div>';
+  db.collection('orders').where('userId','==',user.uid).get()
+    .then(function(snap){
+      if(snap.empty){
+        list.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:.84rem">No orders yet. Tap the button below to start! 👇</div>';
+        return;
+      }
+      var orders=snap.docs.map(function(d){return d.data();});
+      orders.sort(function(a,b){return(b.createdAtMs||0)-(a.createdAtMs||0);});
+      var latest=orders[0];
+      list.innerHTML='<div class="card"><div class="card-inner" style="padding:1rem"><h3 style="margin-bottom:.5rem">📦 Latest Order</h3><p style="font-size:.85rem;color:var(--muted)">Order #'+latest.orderId+' is currently <b>'+statusLbl(latest.status)+'</b></p><button class="btn btn-outline" onclick="gotoTab(\'orders\')" style="margin-top:.8rem">View My Orders</button></div></div>';
+      list.querySelectorAll('.order-card').forEach(function(c,i){
+        c.onclick=function(){openModal(orders[i],false);};
+      });
+      if(orders.length>3){
+        var more=document.createElement('button');
+        more.className='btn btn-ghost';more.textContent='View all '+orders.length+' orders';
+        more.style.marginTop='.5rem';
+        more.onclick=function(){gotoTab('orders');};
+        list.appendChild(more);
+      }
+    })
+    .catch(function(){list.innerHTML='<p style="color:var(--red);text-align:center;font-size:.82rem">Failed to load. Check connection.</p>';});
+}
+
+function loadOrders(){
+  if(!user) return;
+  var list=document.getElementById('orders-list');
+  var sub=document.getElementById('orders-sub');
+  list.innerHTML='<div class="spinner"></div>';
+  db.collection('orders').where('userId','==',user.uid).get()
+    .then(function(snap){
+      if(snap.empty){
+        sub.textContent='';
+        list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted)"><div style="font-size:2rem;margin-bottom:.5rem">📦</div><p style="font-weight:700;margin-bottom:.3rem">No orders yet</p><p style="font-size:.8rem">Tap "New Order" to place your first order</p></div>';
+        return;
+      }
+      var orders=snap.docs.map(function(d){return d.data();});
+      orders.sort(function(a,b){return(b.createdAtMs||0)-(a.createdAtMs||0);});
+      sub.textContent=orders.length+' order'+(orders.length>1?'s':'');
+      list.innerHTML='';
+      orders.forEach(function(o,i){
+        var div=document.createElement('div');
+        div.innerHTML=buildOrderCard(o);
+        var card=div.firstChild;
+        card.onclick=function(){openModal(o,false);};
+        list.appendChild(card);
+      });
+    })
+    .catch(function(){list.innerHTML='<p style="color:var(--red);text-align:center;font-size:.82rem;padding:1rem">Failed to load. Check connection.</p>';});
+}
+
+function buildOrderCard(o){
+  return '<div class="order-card">'+
+    '<div class="oc-top">'+
+      '<div><div class="oc-id">#'+o.orderId+'</div><div class="oc-date">'+fmtDate(o.createdAtMs)+'</div></div>'+
+      '<span class="badge '+o.status+'">'+statusLbl(o.status)+'</span>'+
+    '</div>'+
+    '<div class="oc-tags">'+
+      '<span class="tag">📏 '+o.size+'</span>'+
+      '<span class="tag"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+o.colourHex+';vertical-align:middle;margin-right:2px;border:1px solid rgba(0,0,0,.1)"></span>'+o.colour+'</span>'+
+      '<span class="tag">×'+o.quantity+'</span>'+
+      '<span class="tag" style="color:var(--green);border-color:rgba(0,137,123,.2);font-weight:600">₦'+(o.totalAmount||5000).toLocaleString()+'</span>'+
+      '<span class="tag" style="color:'+(o.paymentStatus==='confirmed'?'var(--green)':'#e65100')+'">'+(o.paymentStatus==='confirmed'?'✓ Paid':'⏳ Payment Pending')+'</span>'+
+    '</div>'+
+  '</div>';
+}
+
+// ── SUPPORT TABS ──
+function switchSupportTab(tab){
+  ['human','wa'].forEach(function(t){
+    document.getElementById('stab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('spane-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='human') loadChat();
+}
+
+// ── CHAT ──
+function loadChat(){
+  if(!user) return;
+  var box=document.getElementById('chat-msgs');
+  box.innerHTML='<div class="no-msg">Loading…</div>';
+  if(chatUnsub) chatUnsub();
+  chatUnsub=db.collection('chats').doc(user.uid).collection('messages')
+    .orderBy('ts','asc').limit(60)
+    .onSnapshot(function(snap){
+      if(snap.empty){box.innerHTML='<div class="no-msg">👋 Send a message and we\'ll reply soon!</div>';return;}
+      box.innerHTML='';
+      snap.forEach(function(doc){
+        var m=doc.data();
+        var div=document.createElement('div');
+        div.className='chat-bubble '+(m.role==='admin'?'admin':'user');
+        div.innerHTML='<div class="chat-sender">'+(m.role==='admin'?'ePrints Team':'You')+'</div>'+escHtml(m.text)+'<div class="chat-time">'+fmtTime(m.ts)+'</div>';
+        box.appendChild(div);
+      });
+      box.scrollTop=box.scrollHeight;
+    });
+}
+
+function sendChat(){
+  if(!user) return;
+  var inp=document.getElementById('chat-input');
+  var text=inp.value.trim();
+  if(!text) return;
+  inp.value='';
+  db.collection('chats').doc(user.uid).collection('messages').add({
+    text:text,role:'user',userId:user.uid,
+    userName:user.displayName||user.email,
+    ts:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  db.collection('chats').doc(user.uid).set({
+    userId:user.uid,userName:user.displayName||user.email,
+    userEmail:user.email,lastMsg:text,lastRole:'user',
+    lastTs:firebase.firestore.FieldValue.serverTimestamp()
+  },{merge:true});
+}
+
+function openWA(){
+  var name=document.getElementById('wa-name').value.trim()||'(Name)';
+  var id=document.getElementById('wa-id').value.trim()||'(Order ID)';
+  var msg=document.getElementById('wa-msg').value.trim()||'(Message)';
+  window.open('https://wa.me/'+WA+'?text='+encodeURIComponent('Name: '+name+'\nOrder ID: '+id+'\nComplaint: '+msg),'_blank');
+}
+
+// ── MODAL ──
+function openModal(o,isAdmin){
+  document.getElementById('modal-title').textContent='Order #'+o.orderId;
+  var aRows=isAdmin?
+    '<div class="detail-row"><span class="detail-key">Customer</span><span class="detail-val">'+o.userName+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">Email</span><span class="detail-val">'+o.userEmail+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val">'+(o.userPhone||'—')+'</span></div>'
+    :'';
+  var dRow=o.designURL?
+    '<div class="detail-row" style="flex-direction:column;gap:.4rem"><span class="detail-key">Design</span><img src="'+o.designURL+'" class="modal-img"/></div>'+
+    '<div class="detail-row"><span class="detail-key">Print Instructions</span><span class="detail-val">'+(o.description||'—')+'</span></div>'
+    :'<div class="detail-row"><span class="detail-key">Design</span><span class="detail-val">Plain Shirt</span></div>';
+  var rRow=o.receiptURL?
+    '<div class="detail-row" style="flex-direction:column;gap:.4rem"><span class="detail-key">Receipt</span><img src="'+o.receiptURL+'" class="modal-img" style="border-color:rgba(0,200,83,.3)"/></div>'
+    :'';
+  document.getElementById('modal-body').innerHTML=
+    '<div class="detail-row"><span class="detail-key">Order ID</span><span class="detail-val" style="font-size:1rem;font-weight:800;color:var(--green)">#'+o.orderId+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">Date</span><span class="detail-val">'+fmtDate(o.createdAtMs)+'</span></div>'+
+    aRows+
+    '<div class="detail-row"><span class="detail-key">Order Status</span><span class="detail-val"><span class="badge '+o.status+'">'+statusLbl(o.status)+'</span></span></div>'+
+    '<div class="detail-row"><span class="detail-key">Payment</span><span class="detail-val"><span class="badge '+(o.paymentStatus==='confirmed'?'confirmed':'pending')+'">'+(o.paymentStatus==='confirmed'?'✓ Confirmed':'⏳ Pending')+'</span></span></div>'+
+    '<div class="detail-row"><span class="detail-key">Size</span><span class="detail-val">'+o.size+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">Colour</span><span class="detail-val"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:'+o.colourHex+';vertical-align:middle;margin-right:4px;border:1px solid rgba(0,0,0,.1)"></span>'+o.colour+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">Quantity</span><span class="detail-val">'+o.quantity+' shirt'+(o.quantity>1?'s':'')+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">Amount</span><span class="detail-val" style="color:var(--green);font-weight:800">₦'+(o.totalAmount||5000).toLocaleString()+'</span></div>'+
+    dRow+
+    '<div class="detail-row"><span class="detail-key">WhatsApp</span><span class="detail-val">'+(o.whatsapp||'—')+'</span></div>'+
+    '<div class="detail-row"><span class="detail-key">Delivery</span><span class="detail-val">'+(o.delivery||'—')+'</span></div>'+
+    rRow;
+  document.getElementById('order-modal').classList.add('open');
+}
+function closeModal(){document.getElementById('order-modal').classList.remove('open');}
+
+// ── ADMIN ──
+function adminLogin(){
+  var pass=document.getElementById('adm-pass').value;
+  var err=document.getElementById('adm-err');
+  if(pass===ADMIN_PASS){
+    err.textContent='';document.getElementById('adm-pass').value='';
+    loadAdminOrders();goto('s-admin');
+  } else err.textContent='Incorrect password.';
+}
+
+var adminOrdersUnsub=null;
+function loadAdminOrders(){
+  var list=document.getElementById('admin-list');
+  list.innerHTML='<div class="spinner"></div>';
+  // Cancel previous listener
+  if(adminOrdersUnsub) adminOrdersUnsub();
+  adminOrdersUnsub=db.collection('orders')
+    .onSnapshot(function(snap){
+      allOrders=snap.docs.map(function(d){return d.data();});
+      // Sort client-side to avoid needing a Firestore composite index
+      allOrders.sort(function(a,b){return(b.createdAtMs||0)-(a.createdAtMs||0);});
+      document.getElementById('st-total').textContent=allOrders.length;
+      document.getElementById('st-pending').textContent=allOrders.filter(function(o){return o.status==='pending';}).length;
+      document.getElementById('st-progress').textContent=allOrders.filter(function(o){return o.status==='progress';}).length;
+      document.getElementById('st-done').textContent=allOrders.filter(function(o){return o.status==='done';}).length;
+      renderAdmin();
+    },function(err){
+      list.innerHTML='<div style="text-align:center;padding:1.5rem;color:var(--red);font-size:.82rem">⚠ Could not load orders.<br/><span style="color:var(--muted);font-size:.74rem">'+err.message+'</span><br/><button class="btn btn-ghost" style="margin-top:.8rem;padding:.4rem 1rem;font-size:.78rem" onclick="loadAdminOrders()">Retry</button></div>';
+    });
+}
+
+function filterAdmin(f,btn){
+  adminFilter=f;
+  document.querySelectorAll('.chip').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderAdmin();
+}
+
+function renderAdmin(){
+  var list=document.getElementById('admin-list');
+  var orders=adminFilter==='all'?allOrders:allOrders.filter(function(o){return o.status===adminFilter;});
+  if(orders.length===0){list.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted)"><div style="font-size:2rem;margin-bottom:.5rem">📭</div><p>No orders here.</p></div>';return;}
+  list.innerHTML='';
+  orders.forEach(function(o){
+    var card=document.createElement('div');
+    card.className='admin-card';
+    var dHtml=o.designURL?'<p style="font-size:.7rem;color:var(--muted);margin-bottom:.25rem">Design:</p><img src="'+o.designURL+'" class="admin-img"/>':'';
+    var rHtml=o.receiptURL?'<p style="font-size:.7rem;color:var(--muted);margin-bottom:.25rem">Receipt:</p><img src="'+o.receiptURL+'" class="admin-receipt"/>':'<p style="font-size:.73rem;color:var(--red);margin:.4rem 0">⚠ No receipt</p>';
+    card.innerHTML=
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;flex-wrap:wrap;gap:.4rem">'+
+        '<div><div class="admin-id">#'+o.orderId+'</div>'+
+        '<div class="admin-meta">👤 '+o.userName+' · 📧 '+o.userEmail+'</div>'+
+        '<div class="admin-meta">'+(o.whatsapp?'💬 <a href="https://wa.me/234'+o.whatsapp.replace(/^0/,'').replace(/\D/g,'')+'" target="_blank" style="color:#25D366;font-weight:700;text-decoration:none;font-size:.8rem;background:#e8fdf0;padding:.1rem .45rem;border-radius:50px;border:1px solid #a5f0c0">'+o.whatsapp+' ↗</a>':'<span style="color:var(--muted);font-size:.72rem">No WhatsApp</span>')+' · 📍 '+(o.delivery||'—')+'</div>'+
+        '<div class="admin-meta">🕐 '+fmtDate(o.createdAtMs)+'</div></div>'+
+        '<span class="badge '+o.status+'">'+statusLbl(o.status)+'</span>'+
+      '</div>'+
+      '<div class="admin-grid">'+
+        '<div class="admin-kv"><span class="k">Size: </span><span class="v">'+o.size+'</span></div>'+
+        '<div class="admin-kv"><span class="k">Colour: </span><span class="v"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+o.colourHex+';vertical-align:middle;margin-right:2px;border:1px solid rgba(0,0,0,.1)"></span>'+o.colour+'</span></div>'+
+        '<div class="admin-kv"><span class="k">Qty: </span><span class="v">'+o.quantity+'</span></div>'+
+        '<div class="admin-kv"><span class="k">Total: </span><span class="v" style="color:var(--green)">₦'+(o.totalAmount||5000).toLocaleString()+'</span></div>'+
+      '</div>'+
+      (o.description?'<div style="font-size:.78rem;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.45rem .75rem;margin-bottom:.6rem;white-space:pre-wrap;line-height:1.5">'+o.description+'</div>':'')+
+      dHtml+rHtml+
+      '<div class="two-col">'+
+        '<div class="status-block">'+
+          '<div class="status-block-lab">💳 Payment</div>'+
+          '<select class="status-sel" data-id="'+o.orderId+'" data-type="payment" onchange="updateField(this)">'+
+            '<option value="pending" '+(o.paymentStatus==='pending'?'selected':'')+'>⏳ Pending</option>'+
+            '<option value="confirmed" '+(o.paymentStatus==='confirmed'?'selected':'')+'>✅ Confirmed</option>'+
+          '</select>'+
+        '</div>'+
+        '<div class="status-block">'+
+          '<div class="status-block-lab">📦 Order</div>'+
+          '<select class="status-sel" data-id="'+o.orderId+'" data-type="order" onchange="updateField(this)">'+
+            '<option value="pending" '+(o.status==='pending'?'selected':'')+'>⏳ Pending</option>'+
+            '<option value="progress" '+(o.status==='progress'?'selected':'')+'>🔄 In Progress</option>'+
+            '<option value="done" '+(o.status==='done'?'selected':'')+'>✅ Completed</option>'+
+            '<option value="ready" '+(o.status==='ready'?'selected':'')+'>🚀 Ready</option>'+
+          '</select>'+
+        '</div>'+
+      '</div>'+
+      '<button class="btn btn-ghost" onclick="openAdminChatWith(\''+o.userId+'\',\''+o.userName+'\')" style="margin-top:.5rem;padding:.45rem;font-size:.75rem">💬 Chat with Customer</button>';
+    list.appendChild(card);
+  });
+}
+
+function updateField(sel){
+  var id=sel.getAttribute('data-id');
+  var type=sel.getAttribute('data-type');
+  var val=sel.value;
+  sel.disabled=true;
+  var upd={};
+  if(type==='payment') upd.paymentStatus=val;
+  else upd.status=val;
+  db.collection('orders').doc(id).update(upd)
+    .then(function(){
+      var o=allOrders.find(function(x){return x.orderId===id;});
+      if(o){if(type==='payment')o.paymentStatus=val;else o.status=val;}
+      document.getElementById('st-pending').textContent=allOrders.filter(function(o){return o.status==='pending';}).length;
+      document.getElementById('st-progress').textContent=allOrders.filter(function(o){return o.status==='progress';}).length;
+      document.getElementById('st-done').textContent=allOrders.filter(function(o){return o.status==='done';}).length;
+      sel.disabled=false;
+    })
+    .catch(function(){alert('Update failed.');sel.disabled=false;});
+}
+
+// ── ADMIN CHAT ──
+function loadAdminChatList(){
+  var list=document.getElementById('admin-chat-list');
+  list.innerHTML='<div class="spinner"></div>';
+  db.collection('chats').get().then(function(snap){
+    if(snap.empty){list.innerHTML='<div class="no-msg">No customer messages yet.</div>';return;}
+    list.innerHTML='';
+    snap.forEach(function(doc){
+      var d=doc.data();
+      var card=document.createElement('div');
+      card.className='order-card';
+      card.style.cursor='pointer';
+      card.innerHTML='<div class="oc-top"><div><div class="oc-id" style="font-size:.9rem">'+d.userName+'</div><div class="oc-date">'+d.userEmail+'</div></div><span style="font-size:.72rem;color:var(--green)">→</span></div>'+
+        '<div style="font-size:.76rem;color:var(--muted);margin-top:.3rem">'+escHtml(d.lastMsg||'')+'</div>';
+      card.onclick=function(){openAdminChatWith(d.userId,d.userName);};
+      list.appendChild(card);
+    });
+  });
+}
+
+function openAdminChatWith(uid,name){
+  adminChatUid=uid;
+  document.getElementById('admin-chat-title').textContent=name||'Chat';
+  document.getElementById('admin-chat-list-wrap').style.display='none';
+  document.getElementById('admin-chat-bar').style.display='flex';
+  var box=document.getElementById('admin-chat-msgs');
+  box.innerHTML='<div class="no-msg">Loading…</div>';
+  goto('s-admin-chat');
+  if(adminChatUnsub) adminChatUnsub();
+  adminChatUnsub=db.collection('chats').doc(uid).collection('messages')
+    .orderBy('ts','asc').limit(60)
+    .onSnapshot(function(snap){
+      if(snap.empty){box.innerHTML='<div class="no-msg">No messages yet.</div>';return;}
+      box.innerHTML='';
+      snap.forEach(function(doc){
+        var m=doc.data();
+        var div=document.createElement('div');
+        div.className='chat-bubble '+(m.role==='admin'?'admin':'user');
+        div.innerHTML='<div class="chat-sender">'+(m.role==='admin'?'ePrints Team':m.userName||'Customer')+'</div>'+escHtml(m.text)+'<div class="chat-time">'+fmtTime(m.ts)+'</div>';
+        box.appendChild(div);
+      });
+      var scroll=document.getElementById('admin-chat-scroll');
+      scroll.scrollTop=scroll.scrollHeight;
+    });
+}
+
+function adminSendMsg(){
+  if(!adminChatUid) return;
+  var inp=document.getElementById('admin-chat-input');
+  var text=inp.value.trim();
+  if(!text) return;
+  inp.value='';
+  db.collection('chats').doc(adminChatUid).collection('messages').add({
+    text:text,role:'admin',userName:'ePrints Team',
+    ts:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  db.collection('chats').doc(adminChatUid).set({lastMsg:text,lastTs:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+}
+
+// ── HELPERS ──
+function statusLbl(s){
+  if(s==='pending')return '⏳ Pending';
+  if(s==='progress')return '🔄 In Progress';
+  if(s==='done')return '✅ Completed';
+  if(s==='ready')return '🚀 Ready';
+  return s;
+}
+function fmtDate(ms){
+  if(!ms)return '—';
+  var d=new Date(ms);
+  var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var pad=function(n){return String(n).padStart(2,'0');};
+  var h=d.getHours(),ap=h>=12?'PM':'AM';h=h%12||12;
+  return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear()+' · '+h+':'+pad(d.getMinutes())+' '+ap;
+}
+function fmtTime(ts){
+  if(!ts)return '';
+  try{
+    var d=ts.toDate?ts.toDate():new Date(ts);
+    var h=d.getHours(),ap=h>=12?'PM':'AM';h=h%12||12;
+    return h+':'+String(d.getMinutes()).padStart(2,'0')+' '+ap;
+  }catch(e){return '';}
+}
+function escHtml(t){
+  return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Init price on load
+updatePrice();
+// Push initial history state
+history.replaceState({s:'s-splash'},'');
+</script>
+</body>
+</html>
